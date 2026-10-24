@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-products
+      author: milash
+      changes:
+
+        - createTable:
+            tableName: products
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: unit
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: stock_quantity
+                  type: DECIMAL(12,3)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false

@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-menu-items
+      author: milash
+      changes:
+
+        - createTable:
+            tableName: menu_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: TEXT
+
+              - column:
+                  name: price
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false

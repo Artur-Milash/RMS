@@ -1,0 +1,23 @@
+spring:
+  config:
+    import: "optional:file:.env[.properties]"
+
+  application:
+    name: restaurant-management-system
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/restaurant}
+    username: ${DB_USERNAME:restaurant}
+    password: ${DB_PASSWORD:restaurant}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:S6Uh7swW1znwYbA1/VzExps5Bw4QxDQsujdUaBtO8vg=}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}

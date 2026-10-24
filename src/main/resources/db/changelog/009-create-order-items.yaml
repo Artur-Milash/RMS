@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-create-order-items
+      author: milash
+      changes:
+
+        - createTable:
+            tableName: order_items
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: order_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: menu_item_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: quantity
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: price_at_order
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: order_id
+            referencedTableName: orders
+            referencedColumnNames: id
+            constraintName: fk_order_item_order
+
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: menu_item_id
+            referencedTableName: menu_items
+            referencedColumnNames: id
+            constraintName: fk_order_item_menu_item
