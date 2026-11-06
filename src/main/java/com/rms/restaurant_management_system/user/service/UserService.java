@@ -2,6 +2,7 @@ package com.rms.restaurant_management_system.user.service;
 
 import com.rms.restaurant_management_system.common.exception.DuplicateLoginException;
 import com.rms.restaurant_management_system.common.exception.ResourceNotFoundException;
+import com.rms.restaurant_management_system.auth.dto.RegisterRequest;
 import com.rms.restaurant_management_system.user.dto.UserCreateRequest;
 import com.rms.restaurant_management_system.user.dto.UserResponse;
 import com.rms.restaurant_management_system.user.model.User;
@@ -60,6 +61,22 @@ public class UserService {
 
         return toResponse(savedUser);
     }
+
+        @Transactional
+        public UserResponse register(RegisterRequest request) {
+                if (userRepository.existsByLogin(request.login())) {
+                        throw new DuplicateLoginException("Login already exists");
+                }
+
+                User user = new User();
+                user.setFullName(request.fullName());
+                user.setLogin(request.login());
+                user.setPasswordHash(passwordEncoder.encode(request.password()));
+                user.setRole(UserRole.WAITER);
+                user.setActive(true);
+
+                return toResponse(userRepository.save(user));
+        }
 
     @Transactional
     public UserResponse update(
