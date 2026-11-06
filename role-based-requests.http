@@ -1,0 +1,108 @@
+@baseUrl = http://localhost:8080
+@managerToken = replace-with-manager-jwt
+@waiterToken = replace-with-waiter-jwt
+@chefToken = replace-with-chef-jwt
+@userId = 1
+@productId = 1
+@tableId = 1
+@orderId = 1
+@orderItemId = 1
+
+### 1. MANAGER - view all users (MANAGER only)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{managerToken}}
+Accept: application/json
+
+###
+
+### 2. MANAGER - create a product (MANAGER only)
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Tomatoes",
+  "unit": "KG",
+  "stockQuantity": 10.00
+}
+
+###
+
+### 3. MANAGER - update a product (MANAGER only)
+PUT {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Fresh tomatoes",
+  "unit": "KG",
+  "stockQuantity": 15.00
+}
+
+###
+
+### 4. MANAGER - delete a product (MANAGER only)
+DELETE {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{managerToken}}
+Accept: application/json
+
+###
+
+### 5. CHEF - view products (CHEF or MANAGER)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{chefToken}}
+Accept: application/json
+
+###
+
+### 6. CHEF - view orders being prepared (CHEF or MANAGER)
+GET {{baseUrl}}/api/order-items/preparing
+Authorization: Bearer {{chefToken}}
+Accept: application/json
+
+###
+
+### 7. CHEF - mark an order item as ready (CHEF or MANAGER)
+POST {{baseUrl}}/api/order-items/{{orderItemId}}/ready
+Authorization: Bearer {{chefToken}}
+Accept: application/json
+
+###
+
+### 8. WAITER - view open orders (WAITER, CHEF, or MANAGER)
+GET {{baseUrl}}/api/orders/open
+Authorization: Bearer {{waiterToken}}
+Accept: application/json
+
+###
+
+### 9. WAITER - create an order (WAITER only)
+POST {{baseUrl}}/api/orders
+Authorization: Bearer {{waiterToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "tableId": {{tableId}},
+  "items": [
+    {
+      "menuItemId": 1,
+      "quantity": 2
+    }
+  ]
+}
+
+###
+
+### 10. WAITER - pay an order bill (WAITER or MANAGER)
+POST {{baseUrl}}/api/bills
+Authorization: Bearer {{waiterToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "orderId": {{orderId}},
+  "paymentMethod": "CARD"
+}
