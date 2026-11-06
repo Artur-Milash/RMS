@@ -1,0 +1,47 @@
+@baseUrl = http://localhost:8080
+@token = insert jwt
+@productId = 1
+
+### 1. Show all products
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 2. Create one product
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Tomatoes",
+  "unit": "KG",
+  "stockQuantity": 10.00
+}
+
+### 3. Read one product
+GET {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 4. Update one product
+PUT {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Fresh tomatoes",
+  "unit": "KG",
+  "stockQuantity": 15.00
+}
+
+### 5. Read one product
+GET {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 6. Delete one product
+DELETE {{baseUrl}}/api/products/{{productId}}
+Authorization: Bearer {{token}}
+Accept: application/json
