@@ -40,4 +40,10 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	systemProperty 'user.timezone', 'Europe/Kyiv'
+
+	testLogging {
+    events 'passed', 'skipped', 'failed'
+    exceptionFormat = 'full'
+}
 }

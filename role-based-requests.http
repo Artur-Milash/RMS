@@ -1,9 +1,9 @@
 @baseUrl = http://localhost:8080
-@managerToken = replace-with-manager-jwt
-@waiterToken = replace-with-waiter-jwt
-@chefToken = replace-with-chef-jwt
+@managerToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGVzIjpbIlJPTEVfTUFOQUdFUiJdLCJpc3MiOiJyZXN0YXVyYW50LW1hbmFnZW1lbnQtc3lzdGVtIiwiZnVsbE5hbWUiOiJEZWZhdWx0IEFkbWluIiwiZXhwIjoxNzkzOTY5MDAxLCJpYXQiOjE3OTM5NjU0MDEsInVzZXJJZCI6MX0.KAXbJQOrNkUARccwQ4HJT6ySPn16XbWDCw-NnJ-JEmg
+@waiterToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3YWl0ZXIiLCJyb2xlcyI6WyJST0xFX1dBSVRFUiJdLCJpc3MiOiJyZXN0YXVyYW50LW1hbmFnZW1lbnQtc3lzdGVtIiwiZnVsbE5hbWUiOiJ3YWl0ZXIiLCJleHAiOjE3OTM5NzA1NTAsImlhdCI6MTc5Mzk2Njk1MCwidXNlcklkIjoyfQ.AVSuaoggdmz1vZUyoFQZMQnG-WPt3rPAAOaWMrNo9a8
+@chefToken = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjaGVmZmYiLCJyb2xlcyI6WyJST0xFX0NIRUYiXSwiaXNzIjoicmVzdGF1cmFudC1tYW5hZ2VtZW50LXN5c3RlbSIsImZ1bGxOYW1lIjoiY2hlZiIsImV4cCI6MTc5Mzk3MDU4NiwiaWF0IjoxNzkzOTY2OTg2LCJ1c2VySWQiOjN9.-MB40JOnt5EUqwMusVHb9vDf1RlllO3Jab1M3bO6yxw
 @userId = 1
-@productId = 1
+@productId = 3
 @tableId = 1
 @orderId = 1
 @orderItemId = 1
