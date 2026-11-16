@@ -11,10 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"all", "restaurant"})
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('MANAGER', 'WAITER')")

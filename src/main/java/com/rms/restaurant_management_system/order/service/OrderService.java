@@ -15,6 +15,8 @@ import com.rms.restaurant_management_system.user.model.User;
 import com.rms.restaurant_management_system.user.model.UserRole;
 import com.rms.restaurant_management_system.user.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +33,8 @@ public class OrderService {
     private final OrderItemService orderItemService;
 
     @Transactional(readOnly = true)
-    public List<Order> getAll() {
-        return orderRepository.findAll();
+    public Page<Order> getAll(Pageable pageable) {
+        return orderRepository.findAll(pageable);
     }
 
     @Transactional

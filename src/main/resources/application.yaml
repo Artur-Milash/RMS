@@ -5,6 +5,9 @@ spring:
   application:
     name: restaurant-management-system
 
+  profiles:
+    default: all
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/restaurant}
     username: ${DB_USERNAME:restaurant}
