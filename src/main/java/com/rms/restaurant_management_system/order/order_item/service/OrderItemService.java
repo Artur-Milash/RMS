@@ -21,11 +21,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class OrderItemService {
+
+    private static final int ORDER_ID_BATCH_SIZE = 1000;
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -118,6 +121,16 @@ public class OrderItemService {
     @Transactional(readOnly = true)
     public List<OrderItem> getOrderItems(Long orderId) {
         return orderItemRepository.findByOrderId(orderId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderItem> getOrderItemsByOrderIds(List<Long> orderIds) {
+        List<OrderItem> items = new ArrayList<>();
+        for (int start = 0; start < orderIds.size(); start += ORDER_ID_BATCH_SIZE) {
+            int end = Math.min(start + ORDER_ID_BATCH_SIZE, orderIds.size());
+            items.addAll(orderItemRepository.findByOrderIdIn(orderIds.subList(start, end)));
+        }
+        return items;
     }
 
     @Transactional(readOnly = true)

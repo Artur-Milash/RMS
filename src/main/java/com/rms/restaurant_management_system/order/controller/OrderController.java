@@ -7,41 +7,74 @@ import com.rms.restaurant_management_system.order.service.OrderService;
 import com.rms.restaurant_management_system.order.order_item.dto.OrderItemResponse;
 import com.rms.restaurant_management_system.order.order_item.model.OrderItem;
 import com.rms.restaurant_management_system.order.order_item.service.OrderItemService;
+import com.rms.restaurant_management_system.common.exception.InvalidQuantityException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
+@Profile({"all", "orders"})
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
+
+    private static final int DEFAULT_PAGE_SIZE = 100;
+    private static final int MAX_PAGE_SIZE = 200;
 
     private final OrderService orderService;
     private final OrderItemService orderItemService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('MANAGER', 'WAITER', 'CHEF')")
-    public List<OrderResponse> getAll() {
-        return orderService.getAll().stream().map(this::toResponse).toList();
+    public ResponseEntity<List<OrderResponse>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
+            throw new InvalidQuantityException("page must be non-negative and size must be between 1 and 200");
+        }
+
+        Page<Order> orderPage = orderService.getAll(PageRequest.of(page, size));
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Total-Count", Long.toString(orderPage.getTotalElements()));
+        headers.set("X-Total-Pages", Integer.toString(orderPage.getTotalPages()));
+        headers.set("X-Page", Integer.toString(orderPage.getNumber()));
+        headers.set("X-Page-Size", Integer.toString(orderPage.getSize()));
+        if (orderPage.hasNext()) {
+            headers.add(HttpHeaders.LINK, pageLink(orderPage.getNumber() + 1, orderPage.getSize(), "next"));
+        }
+        if (orderPage.hasPrevious()) {
+            headers.add(HttpHeaders.LINK, pageLink(orderPage.getNumber() - 1, orderPage.getSize(), "prev"));
+        }
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(toResponses(orderPage.getContent()));
     }
 
     @GetMapping("/open")
     @PreAuthorize("hasAnyRole('MANAGER', 'WAITER', 'CHEF')")
     public List<OrderResponse> getOpen() {
-        return orderService.getOpenOrders().stream().map(this::toResponse).toList();
+        return toResponses(orderService.getOpenOrders());
     }
 
     @GetMapping("/waiter/{waiterId}")
     @PreAuthorize("hasAnyRole('MANAGER', 'WAITER')")
     public List<OrderResponse> getByWaiter(@PathVariable Long waiterId) {
-        return orderService.getWaiterOrders(waiterId).stream().map(this::toResponse).toList();
+        return toResponses(orderService.getWaiterOrders(waiterId));
     }
 
     @GetMapping("/{id}")
@@ -75,11 +108,40 @@ public class OrderController {
     }
 
     private OrderResponse toResponse(Order order) {
-        List<OrderItemResponse> items = orderItemService.getOrderItems(order.getId()).stream()
+        return toResponse(order, orderItemService.getOrderItems(order.getId()));
+    }
+
+    private List<OrderResponse> toResponses(List<Order> orders) {
+        if (orders.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, List<OrderItem>> itemsByOrderId = orderItemService.getOrderItemsByOrderIds(
+                        orders.stream().map(Order::getId).toList())
+                .stream()
+                .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
+
+        return orders.stream()
+                .map(order -> toResponse(order, itemsByOrderId.getOrDefault(order.getId(), List.of())))
+                .toList();
+    }
+
+    private OrderResponse toResponse(Order order, List<OrderItem> items) {
+        List<OrderItemResponse> itemResponses = items.stream()
                 .map(this::toItemResponse)
                 .toList();
         return new OrderResponse(order.getId(), order.getTable().getId(), order.getTable().getNumber(),
-                order.getWaiter().getId(), order.getWaiter().getFullName(), order.getCreatedAt(), order.getStatus(), items);
+                order.getWaiter().getId(), order.getWaiter().getFullName(), order.getCreatedAt(), order.getStatus(),
+                itemResponses);
+    }
+
+    private String pageLink(int page, int size, String relation) {
+        String uri = UriComponentsBuilder.fromPath("/api/orders")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .build()
+                .toUriString();
+        return "<" + uri + ">; rel=\"" + relation + "\"";
     }
 
     private OrderItemResponse toItemResponse(OrderItem item) {

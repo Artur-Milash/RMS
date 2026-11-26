@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - restaurant
+          - orders
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: restaurant
+          POSTGRES_USER: restaurant
+          POSTGRES_PASSWORD: restaurant
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U restaurant -d restaurant"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/restaurant
+      DB_USERNAME: restaurant
+      DB_PASSWORD: restaurant
+      JWT_SECRET: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      JWT_EXPIRATION_SECONDS: 3600
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Build
+        run: ./gradlew --no-daemon bootJar
+      - name: Static analysis
+        run: ./gradlew --no-daemon checkstyleMain checkstyleTest
+      - name: Test
+        run: ./gradlew --no-daemon test
+
+  build-container:
+    name: Container image (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - restaurant
+          - orders
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build image
+        run: docker build --build-arg SPRING_PROFILES_ACTIVE=${{ matrix.service }} --file DockerFile --tag "rms-${{ matrix.service }}:${GITHUB_SHA}" .
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: rms-${{ matrix.service }}:${{ github.sha }}
+          scan-type: image
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Save image
+        run: docker save "rms-${{ matrix.service }}:${GITHUB_SHA}" --output image.tar
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-${{ matrix.service }}
+          path: image.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-container:
+    name: Publish image (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: build-container
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - restaurant
+          - orders
+    steps:
+      - name: Download image
+        uses: actions/download-artifact@v4
+        with:
+          name: image-${{ matrix.service }}
+      - name: Load image
+        run: docker load --input image.tar
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag and publish image
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          set -euo pipefail
+          repository="${GITHUB_REPOSITORY,,}"
+          image="ghcr.io/${repository%%/*}/${repository#*/}-${SERVICE}"
+          docker tag "rms-${SERVICE}:${GITHUB_SHA}" "${image}:${GITHUB_SHA}"
+          docker push "${image}:${GITHUB_SHA}"
+          if [ "${GITHUB_REF}" = "refs/heads/master" ]; then
+            docker tag "rms-${SERVICE}:${GITHUB_SHA}" "${image}:latest"
+            docker push "${image}:latest"
+          fi

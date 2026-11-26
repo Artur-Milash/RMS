@@ -12,10 +12,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @RestController
+@Profile({"all", "restaurant"})
 @RequestMapping("/api/supplies")
 @RequiredArgsConstructor
 public class SupplyController {

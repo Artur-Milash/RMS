@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.annotation.Profile;
 
 @RestController
+@Profile({"all", "restaurant"})
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
