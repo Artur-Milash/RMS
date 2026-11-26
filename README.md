@@ -21,3 +21,39 @@ the `all` profile) keeps every endpoint available for local development.
 request a specific page; page numbers are zero-based and `size` is limited to
 200. `X-Total-Count` and `X-Total-Pages` describe the full result, and the
 `Link` response header provides next/previous page URLs.
+
+## Continuous integration and delivery
+
+GitHub Actions runs independent build, Checkstyle, and test jobs for the
+restaurant and orders services on every pull request and branch push. It then
+builds and scans a separate local container image for each service. Branch
+pushes publish images to GitHub Container Registry; pushes to `master` also
+update the `latest` tag. The commit SHA tag is published for every branch push.
+Publishing uses the workflow's `GITHUB_TOKEN`, so no registry credentials need
+to be stored in the repository.
+
+To require these checks before merging, protect the `master` branch in
+repository settings. Require a pull request, disable direct pushes, and select
+`Build and test (restaurant)`, `Build and test (orders)`,
+`Container image (restaurant)`, and `Container image (orders)` as required
+status checks. The publishing jobs are push-only and should not be required.
+Ensure the Actions workflow permissions allow packages to be written. The
+workflow requests `packages: write` only for its publishing job.
+
+To demonstrate that the protection blocks a failing change, push a temporary
+branch with a deliberately incorrect expectation in an existing test, then
+open a pull request to `master`. Confirm a build-and-test check fails and the
+merge button is blocked. Close the pull request without merging and delete the
+temporary branch afterward.
+
+The published image names are
+`ghcr.io/<owner>/rms-restaurant` and `ghcr.io/<owner>/rms-orders`. Pull an
+image using its commit SHA tag or, for the `master` branch, `latest`:
+
+```sh
+docker pull ghcr.io/<owner>/rms-restaurant:<commit-sha>
+docker run --rm -p 8080:8080 -e DB_URL=jdbc:postgresql://host.docker.internal:5432/restaurant -e DB_USERNAME=restaurant -e DB_PASSWORD=restaurant ghcr.io/<owner>/rms-restaurant:<commit-sha>
+```
+
+Set the GHCR package visibility in the GitHub package settings if the images
+need to be publicly pullable.
